@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>Robycam — тахеометр</title>
+<meta name="theme-color" content="#0b0e14" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Robycam" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="icon" type="image/png" href="icon-192.png" />
+<link rel="manifest" href="manifest.webmanifest" />
+<style>body{padding-top:calc(24px + env(safe-area-inset-top));padding-left:calc(16px + env(safe-area-inset-left));padding-right:calc(16px + env(safe-area-inset-right));padding-bottom:calc(40px + env(safe-area-inset-bottom));}</style>
+<style>
+:root {
+  --bg: #0b0e14;
+  --bg-card: #131825;
+  --bg-elevated: #1a2132;
+  --border: #232c42;
+  --text: #e8ecf4;
+  --text-muted: #8b94ab;
+  --accent: #5b8cff;
+  --accent-2: #8b5cf6;
+  --accent-glow: rgba(91, 140, 255, 0.35);
+  --winch: #5b8cff;
+  --optic: #8b5cf6;
+  --head: #22d3a0;
+  --radius: 18px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  background-image:
+    radial-gradient(500px 280px at 85% -5%, rgba(139, 92, 246, 0.14), transparent),
+    radial-gradient(450px 260px at 5% 0%, rgba(91, 140, 255, 0.12), transparent);
+  color: var(--text);
+  padding: 24px 16px 40px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app { max-width: 480px; margin: 0 auto; }
+
+.layout { display: contents; }
+
+@media (min-width: 880px) {
+  .app { max-width: 1020px; }
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .col-right { position: sticky; top: 24px; }
+  .col-right .card:last-child { margin-bottom: 0; }
+}
+
+/* ---------- Header ---------- */
+
+.header { text-align: center; margin-bottom: 22px; }
+
+.logo {
+  width: 52px; height: 52px;
+  margin: 0 auto 12px;
+  display: grid; place-items: center;
+  border-radius: 15px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 8px 28px var(--accent-glow);
+}
+
+.logo svg { width: 28px; height: 28px; color: #fff; }
+
+h1 { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; }
+
+.subtitle { margin-top: 6px; color: var(--text-muted); font-size: 13.5px; line-height: 1.45; }
+
+/* ---------- Cards ---------- */
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.card h2 {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+/* ---------- Points ---------- */
+
+.points {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.point-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 9px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.015);
+  border: 1px solid var(--border);
+  min-width: 0;
+}
+
+.point-title {
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px 5px;
+  padding: 6px 7px;
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+}
+
+.point-title .num {
+  flex: 0 0 auto;
+  display: inline-grid; place-items: center;
+  width: 19px; height: 19px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  color: #fff;
+}
+
+.point-title .role {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.input-wrap { position: relative; }
+
+.input-wrap > span {
+  position: absolute;
+  left: 8px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.input-wrap > em {
+  position: absolute;
+  right: 8px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  font-style: normal;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.input-wrap input {
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 11px 18px 11px 26px;
+  outline: none;
+  text-align: right;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-wrap input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(91, 140, 255, 0.18);
+}
+
+/* ---------- Results ---------- */
+
+#results { overflow-x: auto; }
+
+.res-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.res-table th {
+  text-align: right;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding: 0 0 8px;
+}
+
+.res-table th:first-child { text-align: left; }
+
+.res-table td {
+  padding: 7px 0;
+  text-align: right;
+  border-top: 1px solid var(--border);
+}
+
+.res-table td:first-child { text-align: left; font-weight: 600; white-space: nowrap; }
+
+.res-table td .num {
+  display: inline-grid; place-items: center;
+  width: 18px; height: 18px;
+  border-radius: 5px;
+  font-size: 11px;
+  color: #fff;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.cables {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 8px;
+}
+
+.cable-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.cable-row span { color: var(--text-muted); display: flex; align-items: center; }
+.cable-row b { font-variant-numeric: tabular-nums; }
+
+.cable-row i {
+  display: inline-block;
+  width: 14px; height: 3px;
+  border-radius: 2px;
+  margin-right: 8px;
+}
+
+.warn {
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: #ffb454;
+  line-height: 1.5;
+}
+
+/* ---------- Excel-блоки (жёлтый ввод / зелёный результат) ---------- */
+
+.excel-blocks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .excel-blocks { grid-template-columns: 1fr; }
+}
+
+.excel-block {
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  overflow: hidden;
+}
+
+.excel-title {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+  line-height: 1.35;
+}
+
+.excel-title.y { color: var(--winch); }
+.excel-title.x { color: var(--optic); }
+
+.excel-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.excel-table th {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  padding: 8px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.excel-table td {
+  padding: 5px 6px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.excel-table td.row-label {
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: left;
+  padding-left: 10px;
+  width: 36px;
+}
+
+.cell-input input {
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  background: rgba(255, 200, 50, 0.14);
+  border: 1px solid rgba(255, 200, 50, 0.42);
+  border-radius: 8px;
+  padding: 9px 6px;
+  text-align: center;
+  outline: none;
+}
+
+.cell-input input:focus {
+  border-color: rgba(255, 200, 50, 0.75);
+  box-shadow: 0 0 0 2px rgba(255, 200, 50, 0.15);
+}
+
+.cell-in {
+  background: rgba(255, 200, 50, 0.14);
+  border: 1px solid rgba(255, 200, 50, 0.42);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #ffd666;
+  padding: 9px 6px;
+  min-width: 0;
+}
+
+.cell-in.empty {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.cell-in input[type="hidden"] { display: none; }
+
+.dms-labels td {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.cell-out {
+  background: rgba(34, 211, 160, 0.14);
+  border: 1px solid rgba(34, 211, 160, 0.38);
+  border-radius: 8px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #3ee8b8;
+  padding: 10px 4px;
+  min-width: 0;
+}
+
+.cell-out.err {
+  background: rgba(255, 100, 80, 0.12);
+  border-color: rgba(255, 100, 80, 0.35);
+  color: #ffb454;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.section-hint {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: -6px 0 14px;
+}
+
+/* ---------- Быстрый ввод с тахеометра ---------- */
+
+.entry-step {
+  margin-bottom: 16px;
+}
+
+.entry-step:last-child { margin-bottom: 0; }
+
+.step-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.step-label strong {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.quick-targets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 380px) {
+  .quick-targets { grid-template-columns: repeat(2, 1fr); }
+}
+
+.quick-chip {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 10px 8px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.quick-chip span {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.quick-chip.active {
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(91, 140, 255, 0.35);
+}
+
+.quick-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.point-group.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(91, 140, 255, 0.35);
+}
+
+.btn-confirm {
+  width: 100%;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  padding: 13px 16px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 6px 20px var(--accent-glow);
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.btn-confirm:active { transform: scale(0.98); }
+.btn-confirm:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.quick-status {
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.45;
+  text-align: center;
+}
+
+.quick-status.ok { color: #3ee8b8; }
+.quick-status.err { color: #ffb454; }
+
+.entry-panel {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.entry-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.point-readouts {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+.point-readout-cell span {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.point-val {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  padding: 10px 6px;
+  border-radius: 8px;
+  background: rgba(34, 211, 160, 0.14);
+  border: 1px solid rgba(34, 211, 160, 0.38);
+  color: #3ee8b8;
+}
+
+.point-val.empty {
+  background: var(--bg-elevated);
+  border-color: var(--border);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.point-group.flash {
+  animation: flashCard 0.55s ease;
+}
+
+@keyframes flashCard {
+  0% { box-shadow: 0 0 0 0 rgba(91, 140, 255, 0.5); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* ---------- Views ---------- */
+
+.view-block { margin-bottom: 14px; }
+.view-block:last-child { margin-bottom: 0; }
+
+.view-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  border-radius: 12px;
+  background: #0d1119;
+  border: 1px solid var(--border);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  justify-content: center;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.legend span { display: flex; align-items: center; }
+.legend i.dot { width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; }
+
+.footer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="header">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>
+      </svg>
+    </div>
+    <h1>Robycam · тахеометр</h1>
+    <p class="subtitle">Ввод координат с тахеометра → пересчёт по формулам Excel<br/>и схема 6 точек установки</p>
+  </header>
+
+  <div class="layout">
+  <div class="col-left">
+
+  <section class="card">
+    <h2>Ввод с тахеометра</h2>
+    <p class="section-hint">1 — выберите точку, 2 — введите координаты для неё, 3 — подтвердите. Данные попадут в блок ниже.</p>
+    <div class="entry-step">
+      <p class="step-label"><strong>1</strong> · Выбор точки</p>
+      <div class="quick-targets" id="quickTargets"></div>
+    </div>
+    <div class="entry-step">
+      <p class="step-label" id="coordStepLabel"><strong>2</strong> · Координаты для «Шкив 1»</p>
+      <div class="quick-fields">
+        <div class="input-wrap"><span>X</span><input type="text" inputmode="decimal" id="quick_x" placeholder="—"><em>м</em></div>
+        <div class="input-wrap"><span>Y</span><input type="text" inputmode="decimal" id="quick_y" placeholder="—"><em>м</em></div>
+        <div class="input-wrap"><span>H</span><input type="text" inputmode="decimal" id="quick_h" placeholder="—"><em>м</em></div>
+      </div>
+    </div>
+    <div class="entry-step">
+      <p class="step-label"><strong>3</strong> · Применить</p>
+      <button type="button" class="btn-confirm" id="btnConfirm">Подтвердить</button>
+      <p class="quick-status" id="quickStatus"></p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Точки установки</h2>
+    <p class="section-hint">Записанные координаты — обновляются после подтверждения ввода сверху.</p>
+    <div class="points" id="pointsGrid"></div>
+  </section>
+
+  <section class="card">
+    <h2>Пересчёт по формулам Excel</h2>
+    <p class="section-hint">Жёлтые — координаты из подтверждённого ввода (шкивы 1–3). Зелёные — угол в ° ′ ″.</p>
+    <div class="excel-blocks">
+      <!-- Блок ∥ Y -->
+      <div class="excel-block">
+        <div class="excel-title y">Линия ∥ оси Y</div>
+        <table class="excel-table">
+          <thead><tr><th></th><th>left</th><th>right</th><th></th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="row-label">X</td>
+              <td class="cell-in empty" id="cell_y_xl"><span id="disp_y_xl">—</span><input type="hidden" id="y_xl" value=""></td>
+              <td class="cell-in empty" id="cell_y_xr"><span id="disp_y_xr">—</span><input type="hidden" id="y_xr" value=""></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td class="row-label">Y</td>
+              <td class="cell-in empty" id="cell_y_yl"><span id="disp_y_yl">—</span><input type="hidden" id="y_yl" value=""></td>
+              <td class="cell-in empty" id="cell_y_yr"><span id="disp_y_yr">—</span><input type="hidden" id="y_yr" value=""></td>
+              <td></td>
+            </tr>
+            <tr class="dms-labels"><td></td><td>°</td><td>′</td><td>″</td></tr>
+            <tr>
+              <td></td>
+              <td class="cell-out" id="y_d">—</td>
+              <td class="cell-out" id="y_m">—</td>
+              <td class="cell-out" id="y_s">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Блок ∥ X -->
+      <div class="excel-block">
+        <div class="excel-title x">Линия ∥ оси X</div>
+        <table class="excel-table">
+          <thead><tr><th></th><th>nearest</th><th>farest</th><th></th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="row-label">X</td>
+              <td class="cell-in empty" id="cell_x_xn"><span id="disp_x_xn">—</span><input type="hidden" id="x_xn" value=""></td>
+              <td class="cell-in empty" id="cell_x_xf"><span id="disp_x_xf">—</span><input type="hidden" id="x_xf" value=""></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td class="row-label">Y</td>
+              <td class="cell-in empty" id="cell_x_yn"><span id="disp_x_yn">—</span><input type="hidden" id="x_yn" value=""></td>
+              <td class="cell-in empty" id="cell_x_yf"><span id="disp_x_yf">—</span><input type="hidden" id="x_yf" value=""></td>
+              <td></td>
+            </tr>
+            <tr class="dms-labels"><td></td><td>°</td><td>′</td><td>″</td></tr>
+            <tr>
+              <td></td>
+              <td class="cell-out" id="x_d">—</td>
+              <td class="cell-out" id="x_m">—</td>
+              <td class="cell-out" id="x_s">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Тросы и координаты</h2>
+    <div id="results"></div>
+  </section>
+  </div>
+
+  <div class="col-right">
+  <section class="card">
+    <h2>Схема установки</h2>
+    <div class="view-block">
+      <p class="view-title">Вид сверху · план Y–X</p>
+      <canvas id="viewTop" height="320"></canvas>
+    </div>
+    <div class="view-block">
+      <p class="view-title">Разрез сбоку · X–H</p>
+      <canvas id="viewSide" height="180"></canvas>
+    </div>
+    <div class="view-block">
+      <p class="view-title">Вид с фронта · Y–H</p>
+      <canvas id="viewFront" height="180"></canvas>
+    </div>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--winch)"></i>Шкивы 1–4 (лебёдки)</span>
+      <span><i class="dot" style="background:var(--optic)"></i>Шкив 5 (оптика)</span>
+      <span><i class="dot" style="background:var(--head)"></i>Голова Robycam</span>
+    </div>
+  </section>
+  </div>
+  </div>
+
+  <footer class="footer" id="formulaNote"></footer>
+</main>
+
+<script>
+"use strict";
+
+var el = function (id) { return document.getElementById(id); };
+
+var DEG = 180 / Math.PI;
+var C = { winch: "#5b8cff", optic: "#8b5cf6", head: "#22d3a0" };
+var GRID = "#1c2438";
+var AXIS_TEXT = "#8b94ab";
+
+// Пары для формул Excel — читаются из жёлтых ячеек блоков ∥Y и ∥X
+
+// 6 точек: 1–4 шкивы обычных лебёдок, 5 шкив оптической лебёдки, 6 голова Robycam.
+// Координаты вводятся напрямую (как выдаёт тахеометр). Значения по умолчанию —
+// демонстрационная установка на футбольном поле.
+var POINTS = [
+  { n: 1, name: "Шкив 1", role: "лебёдка", color: C.winch, short: "1", def: { x: 52,  y: -34, h: 30 } },
+  { n: 2, name: "Шкив 2", role: "лебёдка", color: C.winch, short: "2", def: { x: 52,  y: 34,  h: 30 } },
+  { n: 3, name: "Шкив 3", role: "лебёдка", color: C.winch, short: "3", def: { x: -52, y: 34,  h: 30 } },
+  { n: 4, name: "Шкив 4", role: "лебёдка", color: C.winch, short: "4", def: { x: -52, y: -34, h: 30 } },
+  { n: 5, name: "Шкив 5", role: "оптика",  color: C.optic, short: "5", def: { x: 0,   y: -40, h: 22 } },
+  { n: 6, name: "Голова", role: "Robycam", color: C.head,  short: "Г", def: { x: 4,   y: -6,  h: 16 } }
+];
+
+var HEAD = 5; // индекс головы
+var quickTarget = 1; // выбранная точка для быстрого ввода
+
+function formatInput(v) {
+  var r = Math.round(v * 1000) / 1000;
+  return String(r).replace(".", ",");
+}
+
+function setInputVal(id, v) {
+  setExcelVal(id, v);
+}
+
+function setExcelVal(id, v) {
+  el(id).value = v;
+  var disp = el("disp_" + id);
+  var cell = el("cell_" + id);
+  if (disp) disp.textContent = formatInput(v);
+  if (cell) cell.className = "cell-in";
+}
+
+function clearExcelVal(id) {
+  el(id).value = "";
+  var disp = el("disp_" + id);
+  var cell = el("cell_" + id);
+  if (disp) disp.textContent = "—";
+  if (cell) cell.className = "cell-in empty";
+}
+
+function setPointVal(n, key, v) {
+  var hid = el("p" + n + "_" + key);
+  var disp = el("disp_p" + n + "_" + key);
+  hid.value = v;
+  if (disp) {
+    disp.textContent = formatInput(v);
+    disp.className = "point-val";
+  }
+}
+
+function clearPointVal(n, key) {
+  var hid = el("p" + n + "_" + key);
+  var disp = el("disp_p" + n + "_" + key);
+  hid.value = "";
+  if (disp) {
+    disp.textContent = "—";
+    disp.className = "point-val empty";
+  }
+}
+
+function updateCoordStepLabel() {
+  var p = POINTS[quickTarget - 1];
+  el("coordStepLabel").innerHTML = "<strong>2</strong> · Координаты для «" + p.name + "»";
+}
+
+function updatePointSelection() {
+  POINTS.forEach(function (p) {
+    var card = el("point_card_" + p.n);
+    if (card) card.classList.toggle("selected", p.n === quickTarget);
+  });
+}
+
+function loadQuickFields() {
+  var x = el("p" + quickTarget + "_x").value;
+  var y = el("p" + quickTarget + "_y").value;
+  var h = el("p" + quickTarget + "_h").value;
+  el("quick_x").value = x ? formatInput(parseFloat(String(x).replace(",", "."))) : "";
+  el("quick_y").value = y ? formatInput(parseFloat(String(y).replace(",", "."))) : "";
+  el("quick_h").value = h ? formatInput(parseFloat(String(h).replace(",", "."))) : "";
+}
+
+function selectQuickTarget(n) {
+  quickTarget = n;
+  buildQuickTargets();
+  updateCoordStepLabel();
+  updatePointSelection();
+  loadQuickFields();
+  el("quick_x").focus();
+}
+
+function buildQuickTargets() {
+  var html = "";
+  POINTS.forEach(function (p) {
+    html += '<button type="button" class="quick-chip' + (p.n === quickTarget ? " active" : "") +
+      '" data-n="' + p.n + '" style="' + (p.n === quickTarget ? "background:" + p.color : "") + '">' +
+      p.name + '<span>' + p.role + '</span></button>';
+  });
+  el("quickTargets").innerHTML = html;
+  el("quickTargets").querySelectorAll(".quick-chip").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      selectQuickTarget(parseInt(btn.getAttribute("data-n"), 10));
+    });
+  });
+}
+
+function flashPoint(n) {
+  var g = el("point_card_" + n);
+  if (!g) return;
+  g.classList.remove("flash");
+  void g.offsetWidth;
+  g.classList.add("flash");
+}
+
+function applyToExcel(n, x, y) {
+  // Шкивы 1–3 также заполняют ячейки Excel (линии ориентирования)
+  if (n === 1) { setInputVal("y_xl", x); setInputVal("y_yl", y); }
+  if (n === 2) { setInputVal("y_xr", x); setInputVal("y_yr", y); setInputVal("x_xn", x); setInputVal("x_yn", y); }
+  if (n === 3) { setInputVal("x_xf", x); setInputVal("x_yf", y); }
+}
+
+function confirmQuickEntry() {
+  var x = parseNum(el("quick_x"));
+  var y = parseNum(el("quick_y"));
+  var hRaw = parseNum(el("quick_h"));
+  var status = el("quickStatus");
+
+  if (x === null || y === null) {
+    status.textContent = "Укажите X и Y с тахеометра.";
+    status.className = "quick-status err";
+    return;
+  }
+
+  var h = hRaw === null ? 0 : hRaw;
+  var p = POINTS[quickTarget - 1];
+
+  setPointVal(quickTarget, "x", x);
+  setPointVal(quickTarget, "y", y);
+  setPointVal(quickTarget, "h", h);
+  applyToExcel(quickTarget, x, y);
+
+  flashPoint(quickTarget);
+  updatePointSelection();
+  update();
+
+  status.textContent = "Записано в «" + p.name + "».";
+  status.className = "quick-status ok";
+
+  el("quick_x").value = "";
+  el("quick_y").value = "";
+  el("quick_h").value = "";
+  el("quick_x").focus();
+}
+
+function parseNum(input) {
+  var raw = input.value;
+  if (!raw || String(raw).trim() === "") return null;
+  var v = parseFloat(String(raw).replace(",", "."));
+  return isNaN(v) ? null : v;
+}
+
+function f3(v) {
+  return (Math.round(v * 1000) / 1000).toFixed(3).replace(".", ",");
+}
+
+function toDmsParts(angle) {
+  var d = Math.floor(angle);
+  var m = Math.floor((angle - d) * 60);
+  var s = Math.floor((angle - d - m / 60) * 3600);
+  return { d: d, m: m, s: s };
+}
+
+// Excel: α = ATAN((Xправ − Xлев) / (Yправ − Yлев)), при α < 0 → α + 360
+function lineAngleY(pLeft, pRight) {
+  var den = pRight.y - pLeft.y;
+  if (den === 0) return null;
+  var a = Math.atan((pRight.x - pLeft.x) / den) * DEG;
+  if (a < 0) a += 360;
+  return a;
+}
+
+// Excel: α = ATAN((Yдальн − Yближ) / (Xдальн − Xближ)), при α < 0 → α + 360
+function lineAngleX(pNear, pFar) {
+  var den = pFar.x - pNear.x;
+  if (den === 0) return null;
+  var a = Math.atan((pFar.y - pNear.y) / den) * DEG;
+  if (a < 0) a += 360;
+  return a;
+}
+
+function readExcelY() {
+  var xl = parseNum(el("y_xl")), yl = parseNum(el("y_yl"));
+  var xr = parseNum(el("y_xr")), yr = parseNum(el("y_yr"));
+  if (xl === null || yl === null || xr === null || yr === null) return null;
+  return { left: { x: xl, y: yl, h: 0 }, right: { x: xr, y: yr, h: 0 } };
+}
+
+function readExcelX() {
+  var xn = parseNum(el("x_xn")), yn = parseNum(el("x_yn"));
+  var xf = parseNum(el("x_xf")), yf = parseNum(el("x_yf"));
+  if (xn === null || yn === null || xf === null || yf === null) return null;
+  return { near: { x: xn, y: yn, h: 0 }, far: { x: xf, y: yf, h: 0 } };
+}
+
+function setDms(prefix, angle) {
+  var dEl = el(prefix + "_d"), mEl = el(prefix + "_m"), sEl = el(prefix + "_s");
+  if (angle === null) {
+    dEl.textContent = "—";
+    mEl.textContent = "—";
+    sEl.textContent = "—";
+    dEl.className = "cell-out err";
+    mEl.className = "cell-out err";
+    sEl.className = "cell-out err";
+    return;
+  }
+  var p = toDmsParts(angle);
+  dEl.textContent = p.d;
+  mEl.textContent = p.m;
+  sEl.textContent = p.s;
+  dEl.className = "cell-out";
+  mEl.className = "cell-out";
+  sEl.className = "cell-out";
+}
+
+/* ---------- Отображение 6 точек (только результат ввода) ---------- */
+
+function readoutCell(p, key, lab) {
+  return '<div class="point-readout-cell"><span>' + lab + '</span>' +
+    '<div class="point-val empty" id="disp_p' + p.n + '_' + key + '">—</div>' +
+    '<input type="hidden" id="p' + p.n + '_' + key + '" value="">' +
+    '</div>';
+}
+
+function buildInputs() {
+  var html = "";
+  POINTS.forEach(function (p) {
+    html += '<div class="point-group" id="point_card_' + p.n + '">' +
+      '<div class="point-title"><span class="num" style="background:' + p.color + '">' + p.short + '</span>' +
+        p.name + '<span class="role">' + p.role + '</span></div>' +
+      '<div class="point-readouts">' +
+        readoutCell(p, "x", "X, м") +
+        readoutCell(p, "y", "Y, м") +
+        readoutCell(p, "h", "H, м") +
+      '</div></div>';
+  });
+  el("pointsGrid").innerHTML = html;
+}
+
+/* ---------- Чтение координат ---------- */
+
+function readPoint(n) {
+  var x = parseNum(el("p" + n + "_x"));
+  var y = parseNum(el("p" + n + "_y"));
+  var h = parseNum(el("p" + n + "_h"));
+  if (x === null || y === null) return null;
+  return { x: x, y: y, h: h === null ? 0 : h };
+}
+
+function getScene() {
+  var coords = [];
+  var missing = false;
+  for (var n = 1; n <= 6; n++) {
+    var c = readPoint(n);
+    if (!c) missing = true;
+    coords.push(c);
+  }
+  return { coords: coords, missing: missing };
+}
+
+function dist3(a, b) {
+  return Math.sqrt(
+    (a.x - b.x) * (a.x - b.x) +
+    (a.y - b.y) * (a.y - b.y) +
+    (a.h - b.h) * (a.h - b.h)
+  );
+}
+
+/* ---------- Результаты ---------- */
+
+function calculate() {
+  var sc = getScene();
+  var coords = sc.coords;
+  var head = coords[HEAD];
+
+  // 1. Формулы Excel — зелёные ячейки ° ′ ″
+  var yP = readExcelY();
+  var xP = readExcelX();
+  var aY = yP ? lineAngleY(yP.left, yP.right) : null;
+  var aX = xP ? lineAngleX(xP.near, xP.far) : null;
+  setDms("y", aY);
+  setDms("x", aX);
+
+  // 2. Таблица координат 6 точек
+  var html = '<table class="res-table"><thead><tr>' +
+    '<th>Точка</th><th>X</th><th>Y</th><th>H</th></tr></thead><tbody>';
+  POINTS.forEach(function (p, idx) {
+    var c = coords[idx];
+    html += '<tr><td><span class="num" style="background:' + p.color + '">' + p.short + '</span>' + p.name + '</td>';
+    if (c) html += '<td>' + f3(c.x) + '</td><td>' + f3(c.y) + '</td><td>' + f3(c.h) + '</td>';
+    else html += '<td>—</td><td>—</td><td>—</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+
+  // 3. Длины тросов
+  html += '<div class="cables">';
+  for (var idx = 0; idx < HEAD; idx++) {
+    var p = POINTS[idx];
+    var L = (head && coords[idx]) ? f3(dist3(head, coords[idx])) + " м" : "—";
+    html += '<div class="cable-row"><span><i style="background:' + p.color + '"></i>Трос ' + p.n + ' → голова</span><b>' + L + '</b></div>';
+  }
+  html += '</div>';
+
+  if (sc.missing) html += '<p class="warn">Заполните X и Y для всех точек.</p>';
+
+  el("results").innerHTML = html;
+}
+
+/* ================= Схема ================= */
+
+function niceStep(span, target) {
+  var raw = span / target;
+  var mag = Math.pow(10, Math.floor(Math.log(raw) / Math.LN10));
+  var n = raw / mag;
+  var step = n < 1.5 ? 1 : n < 3.5 ? 2 : n < 7.5 ? 5 : 10;
+  return step * mag;
+}
+
+function fmtTick(v) {
+  var r = Math.round(v * 1000) / 1000;
+  return String(parseFloat(r.toFixed(3)));
+}
+
+/*
+ * nodes: [{u, v, color, short}]
+ * edges: [{a, b, color}]
+ */
+function drawScene(canvas, nodes, edges, axisNames) {
+  var dpr = window.devicePixelRatio || 1;
+  var cssW = canvas.clientWidth;
+  var cssH = parseInt(canvas.getAttribute("height"), 10);
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+  canvas.style.height = cssH + "px";
+  var ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  var present = nodes.filter(Boolean);
+  if (present.length === 0) {
+    ctx.fillStyle = AXIS_TEXT;
+    ctx.font = "12px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText("Нет данных", cssW / 2, cssH / 2);
+    return;
+  }
+
+  var minU = Infinity, maxU = -Infinity, minV = Infinity, maxV = -Infinity;
+  present.forEach(function (p) {
+    minU = Math.min(minU, p.u); maxU = Math.max(maxU, p.u);
+    minV = Math.min(minV, p.v); maxV = Math.max(maxV, p.v);
+  });
+
+  var spanU = maxU - minU, spanV = maxV - minV;
+  var minSpan = Math.max(spanU, spanV, 2) * 0.18;
+  if (spanU < minSpan) { var cu = (minU + maxU) / 2; minU = cu - minSpan / 2; maxU = cu + minSpan / 2; spanU = minSpan; }
+  if (spanV < minSpan) { var cv = (minV + maxV) / 2; minV = cv - minSpan / 2; maxV = cv + minSpan / 2; spanV = minSpan; }
+
+  var pad = { l: 46, r: 16, t: 18, b: 26 };
+  var plotW = cssW - pad.l - pad.r;
+  var plotH = cssH - pad.t - pad.b;
+
+  var scale = Math.min(plotW / (spanU * 1.18), plotH / (spanV * 1.18));
+  var cx = pad.l + plotW / 2, cy = pad.t + plotH / 2;
+  var u0 = (minU + maxU) / 2, v0 = (minV + maxV) / 2;
+
+  var toX = function (u) { return cx + (u - u0) * scale; };
+  var toY = function (v) { return cy - (v - v0) * scale; };
+
+  var visU0 = u0 - plotW / 2 / scale, visU1 = u0 + plotW / 2 / scale;
+  var visV0 = v0 - plotH / 2 / scale, visV1 = v0 + plotH / 2 / scale;
+
+  ctx.font = "10px system-ui";
+  ctx.strokeStyle = GRID;
+  ctx.fillStyle = AXIS_TEXT;
+  ctx.lineWidth = 1;
+
+  var stepU = niceStep(visU1 - visU0, 5);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  for (var u = Math.ceil(visU0 / stepU) * stepU; u <= visU1; u += stepU) {
+    var sx = toX(u);
+    ctx.beginPath(); ctx.moveTo(sx, pad.t); ctx.lineTo(sx, pad.t + plotH); ctx.stroke();
+    if (sx <= cssW - pad.r - 38) ctx.fillText(fmtTick(u), sx, pad.t + plotH + 5);
+  }
+
+  var stepV = niceStep(visV1 - visV0, 4);
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+  for (var v = Math.ceil(visV0 / stepV) * stepV; v <= visV1; v += stepV) {
+    var sy = toY(v);
+    ctx.beginPath(); ctx.moveTo(pad.l, sy); ctx.lineTo(pad.l + plotW, sy); ctx.stroke();
+    ctx.fillText(fmtTick(v), pad.l - 6, sy);
+  }
+
+  ctx.fillStyle = AXIS_TEXT;
+  ctx.font = "bold 10px system-ui";
+  ctx.textAlign = "right";
+  ctx.textBaseline = "top";
+  ctx.fillText(axisNames.u + ", м", cssW - pad.r, pad.t + plotH + 5);
+  ctx.textAlign = "left";
+  ctx.fillText(axisNames.v + ", м", 4, 3);
+
+  ctx.strokeStyle = "#2a3450";
+  ctx.strokeRect(pad.l, pad.t, plotW, plotH);
+
+  // тросы (сплошные линии шкив → голова)
+  edges.forEach(function (e) {
+    var a = nodes[e.a], b = nodes[e.b];
+    if (!a || !b) return;
+    ctx.save();
+    ctx.shadowColor = e.color;
+    ctx.shadowBlur = 6;
+    ctx.strokeStyle = e.color;
+    ctx.lineWidth = e.width || 2;
+    if (e.dash) ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(toX(a.u), toY(a.v));
+    ctx.lineTo(toX(b.u), toY(b.v));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  });
+
+  // узлы
+  nodes.forEach(function (p) {
+    if (!p) return;
+    var px = toX(p.u), py = toY(p.v);
+    var r = p.big ? 6 : 4.5;
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#0d1119";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.stroke();
+
+    if (p.short) {
+      ctx.fillStyle = "#e8ecf4";
+      ctx.font = "bold 11px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      ctx.fillText(p.short, px, py - r - 3);
+    }
+  });
+}
+
+function buildNodes(coords, proj) {
+  return POINTS.map(function (p, idx) {
+    var c = coords[idx];
+    if (!c) return null;
+    var pr = proj(c);
+    return { u: pr.u, v: pr.v, color: p.color, short: p.short, big: idx === HEAD };
+  });
+}
+
+function buildEdges() {
+  var edges = [];
+  for (var idx = 0; idx < HEAD; idx++) {
+    edges.push({ a: idx, b: HEAD, color: POINTS[idx].color, width: 2 });
+  }
+  return edges;
+}
+
+function drawAll() {
+  var coords = getScene().coords;
+  var cables = buildEdges();
+  var projTop = function (c) { return { u: c.y, v: c.x }; };
+
+  drawScene(el("viewTop"), buildNodes(coords, projTop), cables, { u: "Y", v: "X" });
+  drawScene(el("viewSide"), buildNodes(coords, function (c) { return { u: c.x, v: c.h }; }), cables, { u: "X", v: "H" });
+  drawScene(el("viewFront"), buildNodes(coords, function (c) { return { u: c.y, v: c.h }; }), cables, { u: "Y", v: "H" });
+}
+
+/* ================= Управление ================= */
+
+function update() { calculate(); drawAll(); }
+
+buildQuickTargets();
+buildInputs();
+updateCoordStepLabel();
+updatePointSelection();
+loadQuickFields();
+
+el("btnConfirm").addEventListener("click", confirmQuickEntry);
+
+el("quick_x").addEventListener("keydown", function (e) { if (e.key === "Enter") confirmQuickEntry(); });
+el("quick_y").addEventListener("keydown", function (e) { if (e.key === "Enter") confirmQuickEntry(); });
+el("quick_h").addEventListener("keydown", function (e) { if (e.key === "Enter") confirmQuickEntry(); });
+
+window.addEventListener("resize", drawAll);
+
+el("formulaNote").textContent = "Основная версия · " +
+  "∥Y: α = arctg((Xправ−Xлев)/(Yправ−Yлев)); ∥X: α = arctg((Yдальн−Yближ)/(Xдальн−Xближ)); при α<0 → +360°";
+
+update();
+</script>
+
+<script>
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js?v=stable").then(function(r){r.update();});var rf=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(rf)return;rf=true;window.location.reload();});});}
+</script>
+</body>
+</html>

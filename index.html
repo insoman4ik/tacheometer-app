@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Robycam — тахеометр</title>
+<style>
+  :root{
+    --bg:#0b0e14;--card:#131825;--border:#232c42;
+    --text:#e8ecf4;--muted:#8b94ab;--accent:#5b8cff;--accent2:#8b5cf6;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg);color:var(--text);min-height:100vh;
+    background-image:
+      radial-gradient(700px 380px at 85% -10%,rgba(139,92,246,.14),transparent),
+      radial-gradient(620px 360px at 5% 0%,rgba(91,140,255,.12),transparent);
+    display:flex;align-items:center;justify-content:center;padding:28px 18px;
+  }
+  .wrap{max-width:460px;width:100%;text-align:center;}
+  .logo{
+    width:64px;height:64px;margin:0 auto 18px;display:grid;place-items:center;
+    border-radius:18px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    box-shadow:0 10px 34px rgba(91,140,255,.4);
+  }
+  .logo svg{width:34px;height:34px;color:#fff;}
+  h1{font-size:26px;font-weight:800;letter-spacing:-.02em;}
+  .sub{color:var(--muted);font-size:14.5px;margin-top:8px;line-height:1.5;}
+  .card{
+    background:var(--card);border:1px solid var(--border);border-radius:18px;
+    padding:22px;margin-top:22px;text-align:left;
+  }
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    width:100%;text-decoration:none;color:#fff;font-size:16px;font-weight:700;
+    padding:15px;border-radius:14px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    box-shadow:0 8px 26px rgba(91,140,255,.35);transition:transform .15s ease;
+  }
+  .btn:active{transform:scale(.98);}
+  .ver{margin-top:10px;text-align:center;color:var(--muted);font-size:12.5px;}
+  .feat{list-style:none;margin-top:18px;}
+  .feat li{display:flex;gap:10px;padding:8px 0;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);}
+  .feat li:last-child{border-bottom:none;}
+  .feat li b{color:var(--accent);}
+  h2{font-size:12.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px;}
+  ol{margin:6px 0 0 18px;font-size:13.5px;color:var(--muted);line-height:1.7;}
+  .foot{margin-top:20px;font-size:12px;color:var(--muted);line-height:1.6;}
+  .foot a{color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>
+      <path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>
+    </svg>
+  </div>
+  <h1>Robycam · тахеометр</h1>
+  <p class="sub">Выбор точки → координаты X, Y, H → «Подтвердить». Пересчёт Excel и схема 6 точек.</p>
+
+  <div class="card">
+    <h2>Веб-приложение</h2>
+    <a class="btn" href="app.html">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+      </svg>
+      Открыть калькулятор
+    </a>
+    <p class="ver">основная версия · офлайн после первого открытия</p>
+
+    <ul class="feat">
+      <li><b>1</b><span>Выбор шкивов 1–4, оптики 5 или головы Robycam</span></li>
+      <li><b>2</b><span>Ввод координат с тахеометра для выбранной точки</span></li>
+      <li><b>3</b><span>«Подтвердить» — записать, пересчитать углы и обновить схему</span></li>
+      <li><b>•</b><span>Три проекции установки и длины тросов</span></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>iPhone / iPad</h2>
+    <ol>
+      <li>Откройте <a href="app.html" style="color:var(--accent)">калькулятор</a> в <b style="color:var(--text)">Safari</b>.</li>
+      <li>Нажмите «Поделиться» → «На экран „Домой“».</li>
+      <li>Запускайте с иконки — как обычное приложение.</li>
+    </ol>
+  </div>
+
+  <p class="foot">
+    <a href="https://github.com/insoman4ik/tacheometer-app">github.com/insoman4ik/tacheometer-app</a>
+  </p>
+</div>
+</body>
+</html>
